@@ -14,11 +14,6 @@ data Annatation = NotProoved
 								| ByModusPones Int Int
 								deriving (Show)
 
-describeList :: [a] -> String  
-describeList xs = "The list is " ++ what xs  
-    where what [] = "empty."  
-          what [x] = "a singleton list."  
-          what xs = "a longer list." 
 
 genAnnotationFromAxioms :: [Exp] -> Exp -> Annatation
 genAnnotationFromAxioms ax st = genAnnotationFromAxioms' 0 ax st
