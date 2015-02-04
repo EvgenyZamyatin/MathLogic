@@ -1,0 +1,11 @@
+good1.in
+good3.in
+good4.in
+good5.in
+good6.in
+wrong1.in
+wrong2.in
+wrong3.in
+wrong4.in
+wrong5.in
+wrong6.in
