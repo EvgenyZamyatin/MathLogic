@@ -1,7 +1,7 @@
 module Axioms where
 import Parser
 
-axiomList = map parse [ "A -> B -> A"
+axiomList = map parse [   "A -> B -> A"
                         , "(A -> B) -> (A -> B -> C) -> (A -> C)"
                         , "A -> B -> A & B"
                         , "A & B -> A"
