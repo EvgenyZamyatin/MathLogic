@@ -1,3 +1,3 @@
-rm -f *.hi
-rm -f *.o
-rm -rf out
+rm -f src/*.hi
+rm -f src/*.o
+rm -rf src/out
