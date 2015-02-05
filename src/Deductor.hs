@@ -8,19 +8,6 @@ import qualified Axioms as A
 import qualified Data.Map as M
 
 
-substitude :: [(String, Exp)] -> Exp -> Exp
-substitude list tmpl = f (M.fromList list) tmpl 
-	where 
-		f m (Var v) = 
-			let e = M.lookup v m in 
-				case e of 
-					Nothing -> Var v
-					(Just t) -> t
-		f m (Not x) = Not (f m x)
-		f m (And x y) = And (f m x) (f m y)
-		f m (Or x y) = Or (f m y) (f m y)
-		f m (Impl x y) = Impl (f m x) (f m y)
-
 
 remake :: M.Map Int Exp -> Exp -> Exp -> Annotation -> [Exp]
 remake m as e (ByAxiom x) = [e, substitude [("A", e), ("B", as)] (parse "A->B->A"), Impl as e]
@@ -51,8 +38,13 @@ deduct = f' 0 M.empty
 		f' _ _ _ [] [] = []
 		f' c m as (e:el) (a:al) = (remake m as e a) ++ (f' (c+1) (M.insert c e m) as el al) 
 
-
-
+deductAll :: [Exp] -> [Exp] -> [Exp]
+deductAll l e = deductAll' (reverse l) e
+	where
+		deductAll' [] exps = exps
+		deductAll' (a:as) exps = deductAll as e
+			where
+				e = deduct a exps (verify A.axiomList (a:as) exps) 
 
 
 

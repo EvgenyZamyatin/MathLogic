@@ -9,6 +9,7 @@ data Exp =
 				| Not Exp
 				| Var String
 				deriving (Ord, Eq)
+
 instance Show Exp where
 	show e = show' 0 e
 		where
@@ -56,3 +57,17 @@ match' p _ _ = Pair (frs p) False
 
 match :: Exp -> Exp -> Bool --First axiom
 match a b = scn (match' (Pair H.empty True) a b)
+
+
+substitude :: [(String, Exp)] -> Exp -> Exp
+substitude list tmpl = f (H.fromList list) tmpl 
+	where 
+		f m (Var v) = 
+			let e = H.lookup v m in 
+				case e of 
+					Nothing -> Var v
+					(Just t) -> t
+		f m (Not x) = Not (f m x)
+		f m (And x y) = And (f m x) (f m y)
+		f m (Or x y) = Or (f m y) (f m y)
+		f m (Impl x y) = Impl (f m x) (f m y)
