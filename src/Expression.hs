@@ -8,8 +8,23 @@ data Exp =
 				| Impl Exp Exp
 				| Not Exp
 				| Var String
-				deriving (Show, Ord, Eq)
-
+				deriving (Ord, Eq)
+instance Show Exp where
+	show e = show' 0 e
+		where
+			show' c t = 
+				let openBraket a b = if a > b then "(" else "" in
+					let closeBraket a b = if a > b then ")" else "" in
+						case t of 
+							(And x y) -> (openBraket c 3) ++ (show' 3 x) ++ "&" ++ (show' 3 y) ++ closeBraket c 3
+							(Or x y) -> (openBraket c 2) ++ (show' 2 x) ++ "|" ++ (show' 2 y) ++ closeBraket c 2
+							(Impl x y) -> 
+								case x of 
+									(Impl _ _) -> (openBraket c 1) ++ "(" ++ (show' 1 x) ++ ")" ++ "->" ++ (show' 1 y) ++ closeBraket c 1
+									_ -> (openBraket c 1) ++ (show' 1 x) ++ "->" ++ (show' 1 y) ++ closeBraket c 1
+							(Not x) -> (openBraket c 4) ++ "!" ++ (show' 4 x) ++ closeBraket c 4
+							(Var v) -> v
+						
 match' :: Pair (H.Map String Exp) Bool -> Exp -> Exp -> Pair (H.Map String Exp) Bool
 match' p (Impl a1 b1) (Impl a2 b2) = 
 	case p of 

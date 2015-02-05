@@ -18,12 +18,12 @@ import Expression
 	'!' {TokenNot}
 	'->' {TokenImpl}
 
+
 %right '->'
 %left '&' '|'
 %nonassoc '!'
 
-%%
-
+%% 
 
 A : B '->' A { Impl $1 $3 }
 	| B { $1 }

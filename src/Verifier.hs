@@ -32,7 +32,7 @@ genAnnotationFromAssuptions :: [Exp] -> Exp -> Annotation
 genAnnotationFromAssuptions ax st = genAnnotationFromAssuptions' 0 ax st
 	where	
 		genAnnotationFromAssuptions' c [] st = NotProoved
-		genAnnotationFromAssuptions' c (a:ax) st = if match a st then ByAssumption c else genAnnotationFromAssuptions' (c+1) ax st
+		genAnnotationFromAssuptions' c (a:ax) st = if a == st then ByAssumption c else genAnnotationFromAssuptions' (c+1) ax st
 
 genAnnotationByMP :: MM.MultiMap Exp (Pair Exp Int)  -> M.Map Exp Int -> Exp -> Annotation
 --genAnnotationByMP _ _ _ = NotProoved
