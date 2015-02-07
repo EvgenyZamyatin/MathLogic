@@ -69,5 +69,5 @@ substitude list tmpl = f (H.fromList list) tmpl
 					(Just t) -> t
 		f m (Not x) = Not (f m x)
 		f m (And x y) = And (f m x) (f m y)
-		f m (Or x y) = Or (f m y) (f m y)
+		f m (Or x y) = Or (f m x) (f m y)
 		f m (Impl x y) = Impl (f m x) (f m y)

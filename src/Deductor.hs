@@ -4,6 +4,7 @@ import Parser
 import Expression
 import Util
 import Verifier
+
 import qualified Axioms as A
 import qualified Data.Map as M
 
@@ -26,17 +27,19 @@ remake m as e (ByModusPones j k) =
 		case v of 
 			Nothing -> (parse "This can't be")
 			Just t -> t 
-	in map (substitude [("A", as), ("B", extract (M.lookup j m)), ("C", e)] . parse) [
-																																											 "(A->B)->((A->(B->C))->(A->C))"
-																																											,"((A->(B->C))->(A->C))"
-																																											,"A->C"
-																																										 ]
+	in map (substitude [("A", as), ("B", extract (M.lookup j m)), ("C", e)] . parse) ["(A->B)->((A->(B->C))->(A->C))"
+																																									 ,"((A->(B->C))->(A->C))"
+																																									 ,"A->C"
+																																									 ]
 
 deduct :: Exp -> [Exp] -> [Annotation] -> [Exp]
 deduct = f' 0 M.empty
 	where 
 		f' _ _ _ [] [] = []
 		f' c m as (e:el) (a:al) = (remake m as e a) ++ (f' (c+1) (M.insert c e m) as el al) 
+
+deductLast :: [Exp] -> [Exp] -> [Exp]
+deductLast a b = deduct (head a) b (verify A.axiomList a b) 
 
 deductAll :: [Exp] -> [Exp] -> [Exp]
 deductAll l e = deductAll' (reverse l) e

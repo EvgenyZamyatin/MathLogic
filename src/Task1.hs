@@ -12,8 +12,11 @@ import Control.Monad
 import System.Directory
 
 toString :: [(String, Annotation)] -> String 
-toString [] = ""
-toString ((a,b):xs) = a ++ " " ++ (show b) ++ "\n" ++ toString xs
+toString = toString' 0
+	where
+		toString' :: Int -> [(String, Annotation)] -> String 
+		toString' x [] = ""
+		toString' x ((a,b):xs) = "(" ++ (show x) ++ ")" ++ " " ++ a ++ " " ++ (show b) ++ "\n" ++ (toString' (x+1) xs)
 
 main = 
 	myCreateDirectory "../tests/HW1/out"
