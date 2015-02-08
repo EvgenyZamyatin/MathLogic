@@ -20,7 +20,14 @@ toString = toString' 0
 		toString' x [] = ""
 		toString' x ((a,b):xs) = "(" ++ (show x) ++ ")" ++ " " ++ a ++ " " ++ (show b) ++ "\n" ++ (toString' (x+1) xs)
 
-main = 
+main = readFile "task1.in" >>= (return . toString . f) >>= writeFile "task1.out"
+	where 
+		f s = 
+			let lst = lines s  
+				in zip lst (verify A.axiomList [] (map parse lst))
+				
+{-
+main1 = 
 	myCreateDirectory "../tests/HW1/out"
 	>> 
 	fmap lines (readFile ("../tests/HW1/test_list.txt")) >>= f  
@@ -64,3 +71,4 @@ tmp = let thrm = (deductLast (map parse ["!A", "!B", "B"]) ((intuit1 (Var "B") (
 
 tmp1 = let thrm = ((intuit1 (Var "B") (Var "A")) ++ (map parse ["B", "!B", "!B->A", "A"]))
 	in return (toString (zip (map show thrm) (verify [] [] thrm))) >>= writeFile "tmp.txt"
+-}

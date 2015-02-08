@@ -13,10 +13,10 @@ import System.IO
 import Control.Monad
 import System.Directory
 
-toString :: [Exp] -> String -> String 
-toString [] _ = ""
-toString [e] separator = (show e)
-toString (e:xs) separator = (show e) ++ separator ++ (toString xs separator)
+toString :: String -> [Exp] -> String 
+toString _ [] = ""
+toString separator [e] = (show e)
+toString separator (e:xs) = (show e) ++ separator ++ (toString separator xs)
 
 toStringWithAnnotations :: [(Exp, Annotation)] -> String 
 toStringWithAnnotations [] = ""
@@ -29,6 +29,14 @@ parseAssumtions = parseAssumtions' ""
 		parseAssumtions' buf (',':s) = (parse buf) : (parseAssumtions' "" s)
 		parseAssumtions' buf (c:s) = parseAssumtions' (buf ++ [c]) s
 
+main = readFile "task2.in" >>= (return . f) >>= writeFile "task2.out"
+	where
+		f s = let lst = lines s in
+			let (h,t) = (parseAssumtions (head lst), map parse (tail lst)) in
+				let ans = deductLast h t in
+					(toString "," (tail h)) ++ "|-" ++ (show (last ans)) ++ "\n" ++ (toString "\n") ans
+						
+{-
 main = myCreateDirectory "../tests/HW2/out"
 	>> 
 	fmap lines (readFile ("../tests/HW2/test_list.txt")) >>= f  
@@ -59,4 +67,4 @@ calcAllWithAnnotations s =
 							let nexps = deductAll assumt exps in
 							--(toString (init assumt) ",") ++ "|-" ++ ( show (Impl (last assumt) (last exps)) ) ++ "\n" ++
 							(toStringWithAnnotations (zip nexps (verify A.axiomList (init assumt) nexps)))
-							 												
+-}
