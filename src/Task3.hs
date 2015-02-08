@@ -32,4 +32,7 @@ find e = findProof (findAllVars e) [] e
 
 main = readFile "task3.in" >>= (return . go . parse) >>= writeFile "task3.out" 
 
-go e = ((show (find e)))
+go e = let ans = find e 
+	in case ans of
+		Ok _ -> ((show ans))
+		Fail _ -> "Высказывание ложно при " ++ (show ans)
