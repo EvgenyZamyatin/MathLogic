@@ -28,7 +28,7 @@ instance Show Proof where
 
 extract v m = 
 	case M.lookup v m of 
-		Nothing -> Var "hui"
+		Nothing -> Var "h"
 		Just x -> x
 
 letProov :: [Exp] -> Exp -> (Exp, [Exp])
