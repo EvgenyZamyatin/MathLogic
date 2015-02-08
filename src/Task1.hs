@@ -4,6 +4,8 @@ import Verifier
 import Parser
 import Expression
 import Util
+import Lemmas
+import Deductor
 import qualified Axioms as A
 
 
@@ -33,3 +35,32 @@ calc s =
 		where
 			f str = toString (zip list (verify A.axiomList [] (map parse list)))
 				where list = lines str
+
+
+check00 lem = 
+	let (a, b) = (Var "A", Var "B") in
+		let thrm = lem a b in
+		return ((show a) ++ "," ++ (show b) ++ "\n" ++ (toString (zip (map show thrm) (verify A.axiomList [a, b] thrm)))) >>= writeFile "00.txt"
+
+check10 lem = 
+	let (a, b) = (Not (Var "A"), Var "B") in
+		let thrm = lem a b in
+		return ((show a) ++ "," ++ (show b) ++ "\n" ++ (toString (zip (map show thrm) (verify A.axiomList [a, b] thrm)))) >>= writeFile "10.txt"
+
+check01 lem = 
+	let (a, b) = ((Var "A"), Not (Var "B")) in
+		let thrm = lem a b in
+		return ((show a) ++ "," ++ (show b) ++ "\n" ++ (toString (zip (map show thrm) (verify A.axiomList [a, b] thrm)))) >>= writeFile "01.txt"
+
+check11 lem = 
+	let (a, b) = (Not (Var "A"), Not (Var "B")) in
+		let thrm = lem a b in
+		return ((show a) ++ "," ++ (show b) ++ "\n" ++ (toString (zip (map show thrm) (verify A.axiomList [a, b] thrm)))) >>= writeFile "11.txt"
+
+check lem = check00 lem >> check10 lem >> check01 lem >> check11 lem 
+
+tmp = let thrm = (deductLast (map parse ["!A", "!B", "B"]) ((intuit1 (Var "B") (Var "A")) ++ (map parse ["B", "!B", "!B->A", "A"])))
+	in return (toString (zip (map show thrm) (verify [] [] thrm))) >>= writeFile "tmp.txt"
+
+tmp1 = let thrm = ((intuit1 (Var "B") (Var "A")) ++ (map parse ["B", "!B", "!B->A", "A"]))
+	in return (toString (zip (map show thrm) (verify [] [] thrm))) >>= writeFile "tmp.txt"

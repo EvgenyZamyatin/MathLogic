@@ -7,6 +7,7 @@ import Util
 import Deductor
 import qualified Axioms as A
 import Lemmas
+import Proover
 
 
 import System.IO  
@@ -25,3 +26,8 @@ y = (return (toString (implToNotAnd (parse "A->!B")) "\n")) >>= (writeFile "y.tx
 z = (return (toString (andToNotImpl (parse "A&!B")) "\n")) >>= (writeFile "z.txt")
 k = (return (toString (intuit2 (Var "A") (Var "B") ) "\n")) >>= (writeFile "k.txt")
 r = (return (toString (andToNotOr (parse "!A&!B")) "\n")) >>= (writeFile "r.txt")
+
+find :: Exp -> Proof
+find e = findProof (findAllVars e) [] e
+
+go e = (return (show (find e))) >>= writeFile "tmp.txt"

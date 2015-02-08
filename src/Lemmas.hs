@@ -13,6 +13,21 @@ deMorgan (Not (Or a b)) =
 	++ (contraposition (parse "B->(A|B)")) 
 	++ (map parse ["!(A|B)->!B", "!(A|B)->!A", "!(A|B)", "!A", "!B", "!A->!B->!A&!B", "!B->!A&!B", "!A&!B"])))
 
+deMorgan1 (Or (Not a) (Not b)) = 
+	(contraposition (parse "A&B->A"))
+	++(contraposition (parse "A&B->B")) 
+	++(map parse (
+		["A&B->B"
+		,"A&B->B"
+		,"!A->!(A&B)"
+		,"!B->!(A&B)"
+		,"(!A->!(A&B))->(!B->(!A&B))->(!A|!B->!(A&B))"
+		,"(!B->(!A&B))->(!A|!B->!(A&B))"
+		,"!A|!B->!(A&B)"
+		]))
+	
+
+
 contraposition (Impl a b) = map ((substitude [("A", a), ("B", b)])) exps
 	where  
 		exps = deductAll (map parse ["A->B", "!B"]) (map parse list)
@@ -38,7 +53,94 @@ intuit1 a b = map (substitude [("A", a), ("B", b)]) (deductAll (map parse ["A", 
 intuit2 a b = map (substitude [("A", a), ("B", b)]) (deductAll (map parse ["!A", "A"]) (map parse ["A", "!A", "A->!B->A", "!B->A", "!A->!B->!A", "!B->!A",
 																																																	 "(!B->A)->(!B->!A)->!!B", "(!B->!A)->!!B", "!!B",
 																																																	 "!!B->B", "B"])) 
+aOrNotA a = map (substitude [("A", a)]) (
+		contraposition (parse "A->A|!A")
+	++[parse "A->A|!A"]
+	++[parse "!(A|!A)->!A"]
+	++contraposition (parse "!A->A|!A")
+	++[parse "!A->A|!A"]
+	++[parse "!(A|!A)->!!A"]
+	++(map parse 
+		["(!(A|!A)->!A)->(!(A|!A)->!!A)->(!!(A|!A))"
+		,"(!(A|!A)->!!A)->(!!(A|!A))"
+		,"(!!(A|!A))"
+		,"(!!(A|!A))->A|!A"
+		,"A|!A"
+		])
+	) 
 
+
+
+andLem x y = 
+	case (x,y) of 
+		(Not a, Not b) -> map (substitude [("A", a), ("B", b)]) (
+			(contraposition (parse "A&B->A"))++(map parse ["A&B->A","!A->!(A&B)","!A","!(A&B)"]))
+		(Not a, b)     -> map ((substitude [("A", a), ("B", b)])) (
+			(contraposition (parse "A&B->A"))++(map parse ["A&B->A","!A->!(A&B)","!A","!(A&B)"]))
+		(a, Not b)     -> map ((substitude [("A", a), ("B", b)])) (
+			(contraposition (parse "A&B->B"))++(map parse ["A&B->B","!B->!(A&B)","!B","!(A&B)"]))
+		(a, b)         -> map ((substitude [("A", a), ("B", b)]) . parse) (
+			["A->B->(A&B)","A","B","B->(A&B)","A&B"])
+
+orLem x y = 
+	case (x,y) of 
+		(Not a, Not b) -> map (substitude [("A", a), ("B", b)]) (
+			(contraposition (parse "A&B->A"))
+			++(aToa (Var "A"))
+			++(deductLast (map parse ["B", "!A", "!B"]) ((intuit1 (Var "B") (Var "A")) ++ (map parse ["B", "!B", "!B->A", "A"])))
+			++contraposition (parse "A|B->A")
+			++(map parse 
+				["(A->A)->(B->A)->(A|B->A)"
+				,"(B->A)->(A|B->A)"
+				,"(A|B->A)"
+				,"!A->!(A|B)"
+				,"!A"
+				,"!(A|B)"]))
+		(Not a, b)     -> map ((substitude [("A", a), ("B", b)]) . parse) (
+			["B->A|B", "B", "A|B"])
+		(a, Not b)     -> map ((substitude [("A", a), ("B", b)]) . parse) (
+			["A->A|B", "A", "A|B"])
+		(a, b)         -> map ((substitude [("A", a), ("B", b)]) . parse) (
+			["A->A|B", "A", "A|B"])
+
+impLem x y = 
+	case (x,y) of 
+		(Not a, Not b) -> map (substitude [("A", a), ("B", b)]) 
+			(deductLast (map parse ["A", "!A", "!B"]) ((intuit1 (Var "A") (Var "B")) ++ (map parse ["A", "!A", "!A->B", "B"])))
+		(Not a, b)	   -> map (substitude [("A", a), ("B", b)]) 
+			(deductLast (map parse ["A", "!A", "B"]) ( (intuit1 (Var "A") (Var "B")) ++ (map parse ["A", "!A", "!A->B", "B"])))
+		(a, Not b)     -> map ((substitude [("A", a), ("B", b)])) (
+			(deductLast (map parse ["A->B", "A", "!B"]) ((intuit1 (Var "B") (parse "!A")) ++ (map parse ["A->B", "A", "B", "!B", "!B->!A", "!A"]))) 
+			++ map parse
+			["((A->B)->A)->((A->B)->!A)->!(A->B)"
+			,"A->(A->B)->A"
+			,"A"
+			,"(A->B)->A"
+			,"((A->B)->!A)->!(A->B)"
+			,"!(A->B)"]
+			)
+		(a, b)         -> map (substitude [("A", a), ("B", b)]) (deductLast (map parse ["A", "A", "B"]) (map parse ["B"]))
+
+
+notLem :: Exp->[Exp]
+notLem x = 
+	case x of 
+		Not a -> [Not a]
+		a     -> map (substitude [("A", a)]) (
+			[parse "(!A->A)->(!A->!A)->!!A"]
+			++(deductLast (map parse ["!A", "A"]) ([parse "A"]))
+			++[parse "(!A->!A)->!!A"]
+			++(aToa (parse "!A"))
+			++[parse "!!A"])
+			
+		
+
+			
+
+
+{-------------}
+{--|NO NEED|--}
+{-------------}
 implToOr (Impl (Not a) b) = map (substitude [("A", a), ("B", b)]) exps
 	where
 		exps = deductAll as 
