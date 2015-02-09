@@ -31,34 +31,44 @@ extract v m =
 		Just x -> x
 
 letProov :: [Exp] -> Exp -> (Exp, [Exp])
-letProov l e = letProov' (convert l) e
+letProov l e = res
 	where 
-		convert [] = M.empty
-		convert (a:as) = 
-			case a of 
-				(Not (Var s)) -> M.insert s a (convert as)
-				(Var s) -> M.insert s a (convert as)
+			res = case (letProov' (convert l) e) of
+				(Proovable e, f) -> (e , f)
+				(ProovableNot e, f) -> ((Not e), f)
+					
+convert [] = M.empty
+convert (a:as) = 
+	case a of 
+		(Not (Var s)) -> M.insert s a (convert as)
+		(Var s) -> M.insert s a (convert as)
 
-letProov' :: M.Map String Exp ->Exp->(Exp, [Exp])
+letProov' :: M.Map String Exp ->Exp->(Statement, [Exp])
 letProov' as e = 
 	case e of 
 		And a b -> 
 			let ((rf, f),(rs, s)) = (letProov' as a, letProov' as b) 
 				in let r = f ++ s ++ (andLem rf rs)
-					in (last r, r)  
+					in let h = if ((last r) == e) then Proovable e else ProovableNot e
+						in (h, r)  
 		Or a b -> 
 			let ((rf, f),(rs, s)) = (letProov' as a, letProov' as b) 
 				in let r = f ++ s ++ (orLem rf rs)
-					in (last r, r)  
+					in let h = if ((last r) == e) then Proovable e else ProovableNot e
+						in (h, r)  
 		Impl a b -> 
 			let ((rf, f),(rs, s)) = (letProov' as a, letProov' as b) 
 				in let r = f ++ s ++ (impLem rf rs)
-					in (last r, r)  
-		Var a -> (extract a as, [])
+					in let h = if ((last r) == e) then Proovable e else ProovableNot e
+						in (h, r)  
+		Var a -> case (extract a as) of 
+			(Not (Var s)) -> (ProovableNot (Var s), [(Not (Var s))])
+			((Var s)) -> (Proovable (Var s), [((Var s))])
 		Not a -> 
 			let (r,d) = letProov' as a 
 				in let r' = d ++ (notLem r)
-					in (last r', r')
+					in let h = if ((last r') == e) then Proovable e else ProovableNot e
+						in (h, r')
 
 
 merge :: [String] -> [String] -> [String]
