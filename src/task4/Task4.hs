@@ -41,7 +41,7 @@ findError c (a:ma) =
 		Fail _ -> c
 		_ -> findError (c+1) ma
 
-main' = readFile "task1.in" >>= (return . f) >>= writeFile "task1.out"
+main' = readFile "task4.in" >>= (return . f) >>= writeFile "task4.out"
 	where
 		f s = let lst = lines s in
 			let (h,t) = (parseAssumtions (head lst), map parse (tail lst)) in
@@ -50,7 +50,7 @@ main' = readFile "task1.in" >>= (return . f) >>= writeFile "task1.out"
 						if (e == -1) then toString (zip (tail lst) proov)
 							else show (proov !! e)
 
-main = readFile "task1.in" >>= (return . f) >>= writeFile "task1.out"
+main = readFile "task4.in" >>= (return . f) >>= writeFile "task4.out"
 	where
 		f s = let lst = lines s in
 			let (h,t) = (parseAssumtions (head lst), map parse (tail lst)) in
