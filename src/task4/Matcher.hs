@@ -111,7 +111,7 @@ matchTerm mc bind (Var a) b = if (Var a) == b then (mc, NoError) else
 	case S.member a bind of 
 		True  -> (mc, if (Var a) == b then NoError else SomeError)
 		False -> case H.lookup a mc of
-						 	 Nothing -> if (canSubsitude bind (Var a) b == NoError) then (H.insert a (show b) mc, NoError) else (mc, NoError) 
+						 	 Nothing -> if (canSubsitude bind (Var a) b == NoError) then (H.insert a (show b) mc, NoError) else (mc, canSubsitude bind (Var a) b) 
 						 	 Just t  -> if (canSubsitude bind (Var a) b == NoError && t == (show b)) then (mc, NoError) else (mc, SomeError) 
 matchTerm mc bind _ _ =
 	(mc, SomeError)
@@ -119,7 +119,7 @@ matchTerm mc bind _ _ =
 canSubsitude :: S.Set String -> Term -> Term -> Error
 canSubsitude binded (Var x) t = 
 	foldl 
-	(\start -> \x -> if (start /= NoError) then start else (if (S.member x binded) then Error1 t x else NoError)) 
+	(\start -> \x -> (if (start /= NoError) then start else (if (S.member x binded) then Error1 t x else NoError)))
 	NoError (varList t)
 
 varList t = 
