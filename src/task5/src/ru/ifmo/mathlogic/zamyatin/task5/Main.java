@@ -36,21 +36,6 @@ public class Main {
                 found = true;
                 ans = map;
             }
-
-            /*
-            boolean need = true;
-            for (String key : map.keySet()) {
-                need &= map.get(key).getL() != Range.NEG_INF;
-                need &= map.get(key).getR() != Range.POS_INF;
-            }
-            if (!need)
-                return;
-            System.out.println("======");
-            for (String key : map.keySet()) {
-                System.out.println(key + " " + map.get(key));
-            }
-            System.out.println("======");
-            */
             return;
         }
         String name = varList.get(pos);
