@@ -11,6 +11,9 @@ import java.util.Map;
 public interface Expression {
 
     public IntervalSet eval(Map<String, Range> map);
-    public String print();
+    public String toString();
+    public void setName(String name);
+    public String getName();
+
 
 }

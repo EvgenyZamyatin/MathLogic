@@ -9,12 +9,24 @@ import java.util.Map;
  * Created by evgeny on 28.03.15.
  */
 public abstract class BinaryOperation implements Expression {
-    private Expression first;
-    private Expression second;
+    protected Expression first;
+    protected Expression second;
+    protected String name;
+
 
     @Override
-    public String print() {
-        return "(" + first.print() + ")" + operation() + "(" + second.print() + ")";
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + first.toString() + ")" + operation() + "(" + second.toString() + ")";
     }
 
     public BinaryOperation(Expression a, Expression b) {

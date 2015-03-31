@@ -48,6 +48,8 @@ public class Main {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
+
+
         Scanner sc = new Scanner(new File("task5.in"));
         PrintWriter out = new PrintWriter(new File("task5.out"));
         e = Parser.parse(sc.next());

@@ -9,19 +9,31 @@ import java.util.Map;
  * Created by evgeny on 28.03.15.
  */
 public class Negate implements Expression {
-    private Expression first;
-
+    protected Expression first;
+    protected String name;
     public Negate(Expression a) {
         first = a;
     }
 
     @Override
     public IntervalSet eval(Map<String, Range> map) {
-        return first.eval(map).negate();
+        IntervalSet ans = first.eval(map).negate();
+        ans.openRanges();
+        return ans;
     }
 
     @Override
-    public String print() {
-        return "!" + "(" + first.print() + ")";
+    public String toString() {
+        return "!" + "(" + first.toString() + ")";
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 }

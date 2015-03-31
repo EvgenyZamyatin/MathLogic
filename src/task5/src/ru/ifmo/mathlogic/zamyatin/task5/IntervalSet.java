@@ -27,10 +27,8 @@ public class IntervalSet {
         IntervalSet ans = new IntervalSet();
         for (Range r : mRanges)
             ans = ans.union(r);
-
         for (Range r : a.mRanges)
             ans = ans.union(r);
-
         return ans;
     }
 
@@ -54,17 +52,22 @@ public class IntervalSet {
         return ans;
     }
 
+    public void openRanges() {
+        for (Range r : mRanges)
+            r.setClosed(false);
+    }
+
     public List<Range> intervals() {
         return mRanges;
     }
 
     public String toString() {
-        String ans = "[";
+        String ans = "{";
         for (Range r : mRanges) {
             ans += r.toString();
             ans += "; ";
         }
-        ans += "]";
+        ans += "}";
         return ans;
     }
 

@@ -10,7 +10,7 @@ import java.util.Map;
  * Created by evgeny on 28.03.15.
  */
 public class Variable implements Expression {
-    private String name;
+    protected String name;
 
     public Variable(String name) {
         this.name = name;
@@ -22,7 +22,17 @@ public class Variable implements Expression {
     }
 
     @Override
-    public String print() {
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public void setName(String name) {
+        return;
+    }
+
+    @Override
+    public String getName() {
         return name;
     }
 }

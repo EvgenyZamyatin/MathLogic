@@ -22,30 +22,7 @@ public class Parser {
         if (pos < str.length() && str.charAt(pos) == '-') {
             pos += 2;
             Expression b = parseExp();
-            a = new BinaryOperation(a, b) {
-                @Override
-                protected IntervalSet operation(IntervalSet a, IntervalSet b) {
-                    a = a.negate();
-                    for (Range ra : a.intervals()) {
-                        for (Range rb : b.intervals()) {
-                            if (ra.getL() == rb.getL())
-                                ra.decL();
-                            if (ra.getL() == rb.getR())
-                                ra.decL();
-                            if (ra.getR() == rb.getL())
-                                ra.incR();
-                            if (ra.getR() == rb.getR())
-                                ra.incR();
-                        }
-                    }
-                    return a.union(b);
-                }
-
-                @Override
-                protected String operation() {
-                    return "->";
-                }
-            };
+            a = new Impl(a, b);
         }
         return a;
     }
@@ -55,18 +32,67 @@ public class Parser {
         if (pos < str.length() && str.charAt(pos) == '|') {
             pos += 1;
             Expression b = parseDis();
-            a = new BinaryOperation(a, b) {
-                @Override
-                protected IntervalSet operation(IntervalSet a, IntervalSet b) {
-                    return a.union(b);
-                }
-                @Override
-                protected String operation() {
-                    return "|";
-                }
-            };
+            a = new Or(a, b);
         }
         return a;
+    }
+
+    private static int counter=1;
+
+    private static class K {
+        public Expression kMinus;
+        public Expression kPlus;
+        public K(Expression a, Expression b) {
+            kMinus = a;
+            kPlus = b;
+        }
+    }
+
+    public static Expression toSimpleImplication(Expression e) {
+        K k = calcK(e);
+        Expression ans = k.kPlus;
+        ans = new And(ans, new Negate(new Variable("P0")));
+        return ans = new Impl(ans, new Variable("P"+counter++));
+    }
+
+    private static K calcK(Expression e) {
+        e.setName("P"+counter++);
+        if (e instanceof Variable) {
+            Expression a = parse(((Variable) e).name + "->" + ((Variable) e).name);
+            Expression b = parse(((Variable) e).name + "->" + ((Variable) e).name);
+            return new K(a, b);
+        }
+        if (e instanceof BinaryOperation) {
+            K ka = calcK(((BinaryOperation) e).first);
+            K kb = calcK(((BinaryOperation) e).second);
+            String pa = ((BinaryOperation) e).first.getName();
+            String pb = ((BinaryOperation) e).second.getName();
+            if (e instanceof And) {
+
+                Expression pl = new And(ka.kPlus, new And(kb.kPlus, new Impl(new And(new Variable(pa), new Variable(pb)), new Variable(e.getName()))));
+                Expression mn = new And(ka.kMinus, new And(kb.kMinus, new And(new Impl(new Variable(e.getName()), new Variable(pa)), new Impl(new Variable(e.getName()), new Variable(pb)))));
+                return new K(mn, pl);
+            }
+            if (e instanceof Or) {
+                Expression pl = new And(ka.kPlus, new And(kb.kPlus, new And(new Impl(new Variable(pa), new Variable(e.getName())), new Impl(new Variable(pb), new Variable(e.getName())))));
+                Expression mn = new And(ka.kMinus, new And(kb.kMinus, new Impl(new Variable(e.getName()), new Or(new Variable(pa), new Variable(pb)))));
+                return new K(mn, pl);
+            }
+            if (e instanceof Impl) {
+                Expression pl = new And(ka.kMinus, new And(kb.kPlus, new Impl(new Impl(new Variable(pa), new Variable(pb)), new Variable(e.getName()))));
+                Expression mn = new And(ka.kPlus, new And(kb.kMinus, new Impl(new And(new Variable(e.getName()), new Variable(pa)), new Variable(pb))));
+                return new K(mn, pl);
+            }
+            throw new NullPointerException();
+        }
+        if (e instanceof Negate) {
+            K k = calcK(((Negate) e).first);
+            String pa = e.getName();
+            Expression pl = new And(k.kMinus, new Impl(new Impl(new Variable(pa), new Variable("P0")), new Variable(e.getName())));
+            Expression mn = new And(k.kPlus, new Impl(new And(new Variable(e.getName()), new Variable(pa)), new Variable("P0")));
+            return new K(mn, pl);
+        }
+        throw new NullPointerException();
     }
 
     private static Expression parseCon() {
@@ -74,16 +100,7 @@ public class Parser {
         if (pos < str.length() && str.charAt(pos) == '&') {
             pos += 1;
             Expression b = parseCon();
-            a = new BinaryOperation(a, b) {
-                @Override
-                protected IntervalSet operation(IntervalSet a, IntervalSet b) {
-                    return a.intersect(b);
-                }
-                @Override
-                protected String operation() {
-                    return "&";
-                }
-            };
+            a = new And(a, b);
         }
         return a;
     }
