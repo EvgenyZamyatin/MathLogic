@@ -41,16 +41,17 @@ findError c (a:ma) =
 		Fail _ -> c
 		_ -> findError (c+1) ma
 
-main' = readFile "task4.in" >>= (return . f) >>= writeFile "task4.out"
+main = readFile "task4.in" >>= (return . f) >>= writeFile "task4.out"
 	where
 		f s = let lst = lines s in
 			let (h,t) = (parseAssumtions (head lst), map parse (tail lst)) in
 				let proov = (verify A.axiomList h t) in
 					let e = findError 0 proov in
-						if (e == -1) then toString (zip (tail lst) proov)
+						if (e == -1) then 
+							toString (zip (tail lst) proov)
 							else show (proov !! e)
 
-main = readFile "task4.in" >>= (return . f) >>= writeFile "task4.out"
+main' = readFile "task4.in" >>= (return . f) >>= writeFile "task4.out"
 	where
 		f s = let lst = lines s in
 			let (h,t) = (parseAssumtions (head lst), map parse (tail lst)) in

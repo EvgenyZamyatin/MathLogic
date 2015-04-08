@@ -48,7 +48,12 @@ genAnnotationFromAxioms ax st =
 		ans -> ans
 		where	
 			genAnnotationFromAxioms' c [] st = Fail SomeError
-			genAnnotationFromAxioms' c (a:ax) st= if (match a st == NoError) then Ok (ByAxiom c) else genAnnotationFromAxioms' (c+1) ax st
+			genAnnotationFromAxioms' c (a:ax) st= 
+				if (match a st == NoError) then 
+					if (c > 9) then if (a == st) then Ok (ByAxiom c) else genAnnotationFromAxioms' (c+1) ax st
+					else 
+						Ok (ByAxiom c) 
+				else genAnnotationFromAxioms' (c+1) ax st
 
 
 
