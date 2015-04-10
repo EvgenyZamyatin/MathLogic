@@ -7,7 +7,7 @@ import Util
 import Deductor
 import Matcher
 import qualified Axioms as A
-
+import Lemmas
 
 import System.IO  
 import Control.Monad
@@ -78,51 +78,92 @@ toString1 _ [] = ""
 toString1 separator [e] = (show e)
 toString1 separator (e:xs) = (show e) ++ separator ++ (toString1 separator xs)
 
+--checkLemma :: (Exp->[Exp])->Exp->[MaybeAnnotation]
+checkLemma = (verify A.axiomList [])
 
-				
+
 {-
-main1 = 
-	myCreateDirectory "../tests/HW1/out"
-	>> 
-	fmap lines (readFile ("../tests/HW1/test_list.txt")) >>= f  
-	where
-		f :: [String] -> IO ()
-		f [s] = calc s >> putStrLn ("complete " ++ s)
-		f (s:xs) = calc s >> putStrLn ("complete " ++ s) >> f xs
-
-calc :: String -> IO ()
-calc s = 
-	fmap f (readFile ( "../tests/HW1/"++ s)) >>= writeFile ("../tests/HW1/out/" ++ s ++ ".out") 
-		where
-			f str = toString (zip list (verify A.axiomList [] (map parse list)))
-				where list = lines str
-
-
-check00 lem = 
-	let (a, b) = (Var "A", Var "B") in
-		let thrm = lem a b in
-		return ((show a) ++ "," ++ (show b) ++ "\n" ++ (toString (zip (map show thrm) (verify A.axiomList [a, b] thrm)))) >>= writeFile "00.txt"
-
-check10 lem = 
-	let (a, b) = (Not (Var "A"), Var "B") in
-		let thrm = lem a b in
-		return ((show a) ++ "," ++ (show b) ++ "\n" ++ (toString (zip (map show thrm) (verify A.axiomList [a, b] thrm)))) >>= writeFile "10.txt"
-
-check01 lem = 
-	let (a, b) = ((Var "A"), Not (Var "B")) in
-		let thrm = lem a b in
-		return ((show a) ++ "," ++ (show b) ++ "\n" ++ (toString (zip (map show thrm) (verify A.axiomList [a, b] thrm)))) >>= writeFile "01.txt"
-
-check11 lem = 
-	let (a, b) = (Not (Var "A"), Not (Var "B")) in
-		let thrm = lem a b in
-		return ((show a) ++ "," ++ (show b) ++ "\n" ++ (toString (zip (map show thrm) (verify A.axiomList [a, b] thrm)))) >>= writeFile "11.txt"
-
-check lem = check00 lem >> check10 lem >> check01 lem >> check11 lem 
-
-tmp = let thrm = (deductLast (map parse ["!A", "!B", "B"]) ((intuit1 (Var "B") (Var "A")) ++ (map parse ["B", "!B", "!B->A", "A"])))
-	in return (toString (zip (map show thrm) (verify [] [] thrm))) >>= writeFile "tmp.txt"
-
-tmp1 = let thrm = ((intuit1 (Var "B") (Var "A")) ++ (map parse ["B", "!B", "!B->A", "A"]))
-	in return (toString (zip (map show thrm) (verify [] [] thrm))) >>= writeFile "tmp.txt"
+left EqualPredicate a b = a
+right EqualPredicate a b = b
 -}
+unpack (EqualPredicate (Sum a b) c) = (a, b, c)
+unpackMul (Mul a b) = (a, b)
+down (Nxt a) = a
+nxts 0 = Zero
+nxts n = Nxt (nxts (n-1))
+
+main7 a b = return (format (toString1 "\n" (letProov a b))) >>= writeFile "task7.out"
+
+
+letProov a b = 
+	if (mod a b == 0) 
+		then 
+			(proov b (a `div` b) 0 a) ++ 
+			[Impl (EqualPredicate (Mul (nxts b) ((nxts (a `div` b)))) (nxts a)) (Exist "z" (EqualPredicate (Mul (nxts b) (Var "z")) (nxts a)))] ++
+			[(Exist "z" (EqualPredicate (Mul (nxts b) (Var "z")) (nxts a)))]
+		else 
+			[]
+
+
+
+proov :: Int -> Int -> Int -> Int -> [Exp]
+proov n m k l 
+	| (k > 0) = 
+		let x = (proov n m (k-1) (l-1)) in
+		let y = last x in
+		let (a, b, c) = unpack y in
+		let b' = Nxt b in 
+		let c' = Nxt c in
+		let tmp = 
+			x ++
+			(subAtA1 (Sum a b) c) ++
+			[(EqualPredicate (Nxt (Sum a b)) (Nxt c))] ++
+			(subAtA5 a b) ++
+			(reflection (Sum a b') (Nxt (Sum a b))) ++ 
+			(subAtA2 (Nxt (Sum a b)) (Sum a b') c') ++
+			[Impl (EqualPredicate (Nxt (Sum a b)) c') (EqualPredicate (Sum a b') c')] ++
+			[(EqualPredicate (Nxt (Sum a b)) c')] ++ 
+			[(EqualPredicate (Sum a b') c')] in
+				tmp
+	
+	| m == 0 && k == 0 = 
+		(subAtA7 (nxts n)) ++
+		(addZero (Mul (nxts n) Zero) Zero)
+	
+	| otherwise = 
+		let x = (proov n (m-1) n (l-1)) in
+		let y = last x in
+			x ++
+			hadleC n m n l y
+
+hadleC n m k l (EqualPredicate (Sum (Mul a b) c) d) =
+	if (n /= k) then []
+		else
+			(subAtA8 a b) ++
+			(reflection (Mul a (Nxt b)) (Sum (Mul a b) a)) ++
+			(subAtA2 (Sum (Mul a b) a) (Mul a (Nxt b)) d) ++ 
+			[Impl (EqualPredicate (Sum (Mul a b) a) d) (EqualPredicate (Mul a (Nxt b)) d)] ++
+			[(EqualPredicate (Mul a (Nxt b)) d)] ++ 
+			if (n*m /= l) then (addZero (Mul a (Nxt b)) d) else []
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

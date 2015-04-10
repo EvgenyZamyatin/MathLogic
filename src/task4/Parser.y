@@ -55,7 +55,7 @@ P : pr '(' TL ')' {SomePredicate $1 $3}
 	| pr {SomePredicate $1 []}
 
 TL : T {[$1]}
-	 | T ',' TL {$1 : $3}
+	 | T ',' TL {($1) : $3}
 
 T : S {$1}
 	| T '+' S {Sum $1 $3}
@@ -71,8 +71,8 @@ M : var {Var $1}
 
 {
 parseError :: [Token] -> a
-parseError (xs) = error ("Parse error on token " ++ (show xs))
 parseError [] = error ("Parse error on token at the end")
+parseError (xs) = error ("Parse error on token " ++ (show xs))
 
 data Token = 
 				TVar String

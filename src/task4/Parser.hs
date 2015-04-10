@@ -456,7 +456,7 @@ happyReduction_17 (HappyAbsSyn9  happy_var_3)
 	_
 	(HappyAbsSyn10  happy_var_1)
 	 =  HappyAbsSyn9
-		 (happy_var_1 : happy_var_3
+		 ((happy_var_1) : happy_var_3
 	)
 happyReduction_17 _ _ _  = notHappyAtAll 
 
@@ -586,8 +586,8 @@ happySeq = happyDontSeq
 
 
 parseError :: [Token] -> a
-parseError (xs) = error ("Parse error on token " ++ (show xs))
 parseError [] = error ("Parse error on token at the end")
+parseError (xs) = error ("Parse error on token " ++ (show xs))
 
 data Token = 
 				TVar String

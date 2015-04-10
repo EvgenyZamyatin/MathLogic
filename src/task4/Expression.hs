@@ -75,6 +75,7 @@ substitude list tmpl = f (H.fromList list) tmpl
 		f m (Impl x y) = Impl (f m x) (f m y)
 		f m (Each x y) = Each x (f m y)
 		f m (Exist x y) = Exist x (f m y)
+		f m (EqualPredicate x y) = (EqualPredicate x y)
 
 
 
