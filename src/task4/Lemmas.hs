@@ -23,6 +23,39 @@ subAtA1 a b =
 				, "#B"
 				]
 
+subAtA3 :: Term -> Term -> [Exp]
+subAtA3 a b = 
+	let tmp = Impl (EqualPredicate (Nxt a) (Nxt (Var "b"))) (EqualPredicate (a) ((Var "b"))) in 
+	let a' = (Impl (EqualPredicate (Nxt a) (Nxt b)) (EqualPredicate (a) (b))) in
+				map ((substitude  [("A", tmp), ("B", a'), ("F", parse "a'=b'->a=b"), ("E", parse "P->P->P")]) . parse) 
+				[ "#F"
+				, "#E"
+				, "#F->#E->#F"
+				, "#E->#F"
+				, "#E->@a(#F)"
+				, "@a(#F)"
+				, "@a(#F)->#A"
+				, "#A"
+				, "#A->#E->#A"
+				, "#E->#A"
+				, "#E->@b(#A)"
+				, "@b(#A)"
+				, "@b(#A)->#B"
+				, "#B"
+				]
+
+subAtA4 a = 
+	map ((substitude  [("T", Not (EqualPredicate (Nxt a) Zero)), ("E", parse "P->P->P")]) . parse) 
+	[ "!a'=0"
+	, "#E"
+	, "!a'=0->#E->!a'=0"
+	, "#E->!a'=0"
+	, "#E->@a(!a'=0)"
+	, "@a(!a'=0)"
+	, "@a(!a'=0)->#T"
+	, "#T"
+	]
+
 subAtA2 :: Term->Term->Term->[Exp]
 subAtA2 a b c = 
 	let tmp1 = Impl (EqualPredicate a (Var "b")) (Impl (EqualPredicate a (Var "c")) (EqualPredicate (Var "b") (Var "c"))) in 
@@ -145,6 +178,22 @@ addZero a b =
 	(subAtA2 a (Sum a Zero) b) ++
 	[Impl (EqualPredicate a b) (EqualPredicate (Sum a Zero) b)] ++ 
 	[(EqualPredicate (Sum a Zero) b)]
+
+removeZero (Sum a Zero) b = 
+	(subAtA6 a) ++
+	[EqualPredicate (Sum a Zero) b] ++
+	(subAtA2 (Sum a Zero) a b) ++ 
+	[Impl (EqualPredicate (Sum a Zero) b) (EqualPredicate a b)] ++
+	[(EqualPredicate a b)]
+
+atoA e = map (substitude [("A", e)]) (map parse list) 
+	where list =  ["#A->(#A->#A)"
+								,"(#A->#A->#A)->(#A->(#A->#A)->#A)->(#A->#A)"
+								,"(#A->(#A->#A)->#A)->(#A->#A)"
+								,"#A->(#A->#A)->#A"
+								,"#A->#A"
+								]
+
 
 
 {-
