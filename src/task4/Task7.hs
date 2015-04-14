@@ -51,16 +51,19 @@ down (Nxt a) = a
 nxts 0 = Zero
 nxts n = Nxt (nxts (n-1))
 
-main = return (format (toString (zip (map show (letproov 15 2)) (checkLemma (letproov 15 2))))) >>= writeFile "task7.out"
+main2 = return (format (toString (zip (map show (letproov 5 3)) (checkLemma (letproov 5 3))))) >>= writeFile "task7.out"
 main1 a b = return (format (toString (zip (map show (letproov a b)) (checkLemma (letproov a b))))) >>= writeFile "task7.out"
-
+main = readFile "task7.in" >>= return . f >>= writeFile "task7.out"
+	where f s = 
+		let [a, b] = (map read (words s))  
+			in (format (toString1 "\n" (letproov a b)))
 
 letproov a b = 
 	if (mod a b == 0) 
 		then 
 			(proovd b (a `div` b) 0 a) ++ 
-			[Impl (EqualPredicate (Mul (nxts b) ((nxts (a `div` b)))) (nxts a)) (Exist "z" (EqualPredicate (Mul (nxts b) (Var "z")) (nxts a)))] ++
-			[(Exist "z" (EqualPredicate (Mul (nxts b) (Var "z")) (nxts a)))]
+			[Impl (EqualPredicate (Mul (nxts b) ((nxts (a `div` b)))) (nxts a)) (Exist "d" (EqualPredicate (Mul (nxts b) (Var "d")) (nxts a)))] ++
+			[(Exist "d" (EqualPredicate (Mul (nxts b) (Var "d")) (nxts a)))]
 		else 
 			proovnd a b
 
@@ -110,16 +113,10 @@ hadleC n m k l (EqualPredicate (Sum (Mul a b) c) d) =
 
 {-======================if a % b != 01===================================-}
 
---proovnd a b = 
 
-proovnd a b = let tmp = (firstStep (Var "x") b a 0 a a) in
+proovnd a b = let tmp = (firstStep (Var "x") b a 0 a a) ++ (eat' b a a) in
  	tmp ++
-	(eat' b a a)
-
-
- 	--(norm (last tmp))
-
-
+	hangExists (last tmp)
 
 proovForBack n m k l (EqualPredicate (Sum (Mul a b) c) d)
 	| (k /= 0) = 
@@ -227,7 +224,7 @@ eat' a b c =
 		(firstStep Zero a (b-1) 0 c c) ++
 		[(substitude [("A", x), ("B", y)] (parse "#B->#A->#B"))] ++
 		[(substitude [("A", x), ("B", y)] (parse "#A->#B"))] ++
-		(hangX (substitude [("A", x), ("B", y)] (parse "#A->#B"))) ++
+		(hangEachX (substitude [("A", x), ("B", y)] (parse "#A->#B"))) ++
 		[(substitude [("A", zr), ("B", Each "x" (Impl x y))] (parse "#A->#B->#A&#B"))] ++
 		[(substitude [("A", zr), ("B", Each "x" (Impl x y))] (parse "#B->#A&#B"))] ++
 		[(substitude [("A", zr), ("B", Each "x" (Impl x y))] (parse "#A&#B"))] ++
@@ -235,10 +232,7 @@ eat' a b c =
 		[(substitude [("C", x)] (parse "#C"))] ++
 		(eat' a (b-1) c)
 
-	
-
-
-hangX e = map ((substitude  [("T", e), ("E", parse "P->P->P")]) . parse) 
+hangEachX e = map ((substitude  [("T", e), ("E", parse "P->P->P")]) . parse) 
 	[ "#T"
 	, "#E"
 	, "#T->#E->#T"
@@ -247,26 +241,31 @@ hangX e = map ((substitude  [("T", e), ("E", parse "P->P->P")]) . parse)
 	, "@x(#T)"
 	]
 
-{-
-norm (Not (EqualPredicate a c)) = 
-	let t = 
-		(atoA (EqualPredicate a c)) ++
-		[Impl (EqualPredicate a c) (Each "x" (EqualPredicate a c))] 
-		--[Impl (Exist "x" (EqualPredicate a c)) (Each "x" (EqualPredicate a c))] ++
-		--[Exist "x" (EqualPredicate a c)] ++ 
-		--[Each "x" (EqualPredicate a c)] ++ 
-		--[Impl (Each "x" (EqualPredicate a c)) ((EqualPredicate a c))] ++
-		--[((EqualPredicate a c))] in
-		in
-	--(removeZero (Sum a b) c) ++
-	(deductLast [Exist "x" (EqualPredicate a c)] t) ++
-	[(substitude [("A", Not (EqualPredicate a c)), ("B", Exist "x" (EqualPredicate a c))] (parse "#A->#B->#A"))] ++ 
-	[(substitude [("A", Not (EqualPredicate a c)), ("B", Exist "x" (EqualPredicate a c))] (parse "#B->#A"))] ++
-	[(substitude [("A", Exist "x" (EqualPredicate a c)), ("B", (EqualPredicate a c))] (parse "(#A->#B)->(#A->!#B)->!#A"))] ++
-	[(substitude [("A", Exist "x" (EqualPredicate a c)), ("B", (EqualPredicate a c))] (parse "(#A->!#B)->!#A"))] ++
-	[(substitude [("A", Exist "x" (EqualPredicate a c)), ("B", (EqualPredicate a c))] (parse "!#A"))] ++
-	[(substitude [("A", Exist "x" (EqualPredicate a c)), ("B", (EqualPredicate a c))] (parse "(#A->!#B)->!#A"))]
--}
+changeVar (Not (EqualPredicate (Mul a (Var s)) c)) = 
+	map ((substitude  [("T", (Not (EqualPredicate (Mul a (Var s)) c))), ("E", parse "P->P->P"), ("F", (Not (EqualPredicate (Mul a (Var "d")) c)))]) . parse) 
+		[ "#T"
+		, "#E"
+		, "#T->#E->#T"
+		, "#E->#T"
+		, "#E->@x(#T)"
+		, "@x(#T)"
+		, "@x(#T)->#F"
+		, "#F"
+	]
+
+
+hangExists (Not (EqualPredicate (Mul a (Var s)) c)) = 
+	let x = (EqualPredicate (Mul a (Var s)) c) in
+	let d = (EqualPredicate (Mul a (Var "d")) c) in
+		[Impl d (Exist "x" x)] ++
+		[Impl (Exist "d" d) (Exist "x" x)] ++ 
+		intuit2 d (Not (Exist "x" x)) ++ 
+		(changeVar (Not x)) ++
+		[Impl d (Not (Exist "x" x))] ++
+		[Impl (Exist "d" d) (Not (Exist "x" x))] ++
+		[substitude [("A", (Exist "d" d)), ("B", (Exist "x" x))] (parse "(#A->#B)->(#A->!#B)->!#A")] ++
+		[substitude [("A", (Exist "d" d)), ("B", (Exist "x" x))] (parse "(#A->!#B)->!#A")] ++
+		[substitude [("A", (Exist "d" d))] (parse "!#A")]
 
  
 		

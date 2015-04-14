@@ -1,6 +1,7 @@
 module Lemmas where
 import Expression
 import Parser
+import Deductor
 
 subAtA1 :: Term -> Term -> [Exp]
 subAtA1 a b = 
@@ -195,7 +196,19 @@ atoA e = map (substitude [("A", e)]) (map parse list)
 								,"#A->#A"
 								]
 
-
+intuit2 a b =  
+	(deductLast [Not a] (deductLast [a, (Not a)] (map ((substitude [("A", a), ("B", b)]) . parse) 
+																								[ "#A"
+																								, "!#A"
+																								, "#A->!#B->#A"
+																								, "!#B->#A"
+																								, "!#A->!#B->!#A"
+																								, "!#B->!#A"
+																								, "(!#B->#A)->(!#B->!#A)->!!#B"
+																								, "(!#B->!#A)->!!#B"
+																								, "!!#B"
+																								, "!!#B->#B"
+																								, "#B"]))) 
 
 
 {-
