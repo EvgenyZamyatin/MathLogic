@@ -39,7 +39,7 @@ toString2 (e:xs) = (show e) ++ "\n" ++ (toString2 xs)
 
 
 --checkLemma :: (Exp->[Exp])->Exp->[MaybeAnnotation]
-checkLemma = (verify A.axiomList [])
+checkLemma = (verify A.axiomList [])	
 checkLemmaA a = (verify A.axiomList [a])
 
 
@@ -112,9 +112,14 @@ hadleC n m k l (EqualPredicate (Sum (Mul a b) c) d) =
 
 --proovnd a b = 
 
-proovnd a b = let tmp = (firstStep b b 0 a a) in
- 	tmp 
+proovnd a b = let tmp = (firstStep (Var "x") b a 0 a a) in
+ 	tmp ++
+	(eat' b a a)
+
+
  	--(norm (last tmp))
+
+
 
 proovForBack n m k l (EqualPredicate (Sum (Mul a b) c) d)
 	| (k /= 0) = 
@@ -142,9 +147,11 @@ proovForBack n m k l (EqualPredicate ((Mul a b)) d) =
 		[EqualPredicate (Sum (Mul a (down b)) (nxts n)) d] ++
 		(proovForBack n (m-1) n l (EqualPredicate (Sum (Mul a (down b)) (nxts n)) d))
 
-firstStep n m k l cnt
+
+
+firstStep zr n m k l cnt
 	| l > 0 && k > 0 = 
-		let tmp = firstStep n m (k-1) (l-1) cnt in
+		let tmp = firstStep zr n m (k-1) (l-1) cnt in
 		let x = last tmp in 
 		let (a,b,c) = unpack x in 
 		let b' = Nxt b in 
@@ -159,8 +166,23 @@ firstStep n m k l cnt
 			[substitude [("A", (EqualPredicate (Sum a b') c')), ("B", (EqualPredicate (Sum a b) c))] (parse "(#A->!#B)->!#A")] ++
 			[substitude [("A", (EqualPredicate (Sum a b') c'))] (parse "!#A")]
 
+	| (l > 0 && k == 0 && m == 0) = 
+		let f = if (l /= cnt) then (Sum (Mul (nxts n) Zero) Zero) else ((Mul (nxts n) Zero)) in
+		let t = 
+			(removeZero (f) (nxts l)) ++
+			[EqualPredicate f (nxts l)] ++
+			(subAtA7 (nxts n)) ++
+			(subAtA2 (((Mul (nxts n)) Zero)) (nxts l) (Zero)) ++
+			[Impl (EqualPredicate (Mul (nxts n) Zero) Zero) (EqualPredicate (nxts l) (Zero))] ++
+			[(EqualPredicate (nxts l) (Zero))] in
+				(deductLast [EqualPredicate (f) (nxts l)] t) ++
+				(deductLast [EqualPredicate (f) (nxts l)] (subAtA4 (nxts (l-1)))) ++
+				[substitude [("A", (EqualPredicate (f) (nxts l))), ("B", (EqualPredicate (nxts l) (Zero)))] (parse "(#A->#B)->(#A->!#B)->!#A")] ++
+				[substitude [("A", (EqualPredicate (f) (nxts l))), ("B", (EqualPredicate (nxts l) (Zero)))] (parse "(#A->!#B)->!#A")] ++
+				[substitude [("A", (EqualPredicate (f) (nxts l))), ("B", (EqualPredicate (nxts l) (Zero)))] (parse "!#A")]
+
 	| (l > 0) && (k == 0) = 
-		let tmp = firstStep n (m-1) (n-1) (l-1) cnt in
+		let tmp = firstStep zr n (m-1) (n-1) (l-1) cnt in
 		let x = last tmp in 
 		let (a,b,c) = unpack x in 
 		let b' = Nxt b in 
@@ -179,7 +201,7 @@ firstStep n m k l cnt
 			[substitude [("A", (f))] (parse "!#A")]
 
 	| (l == 0) = 
-		let a = Mul (nxts n) (nxts' (Var "x") m) in
+		let a = Mul (nxts n) (nxts' zr m) in
 		let b = nxts k in 
 		let t = 
 			[EqualPredicate (Sum a b) Zero] ++
@@ -197,7 +219,35 @@ firstStep n m k l cnt
 nxts' t 0 = t
 nxts' t n = Nxt (nxts' t (n-1))
 
+eat' a 0 c = []
+eat' a b c = 
+	let zr = Not (EqualPredicate (Mul (nxts a) (nxts (b-1))) (nxts c)) in
+	let x = Not (EqualPredicate (Mul (nxts a) (nxts' (Var "x") (b-1))) (nxts c)) in
+	let y = Not (EqualPredicate (Mul (nxts a) (nxts' (Var "x") (b))) (nxts c)) in
+		(firstStep Zero a (b-1) 0 c c) ++
+		[(substitude [("A", x), ("B", y)] (parse "#B->#A->#B"))] ++
+		[(substitude [("A", x), ("B", y)] (parse "#A->#B"))] ++
+		(hangX (substitude [("A", x), ("B", y)] (parse "#A->#B"))) ++
+		[(substitude [("A", zr), ("B", Each "x" (Impl x y))] (parse "#A->#B->#A&#B"))] ++
+		[(substitude [("A", zr), ("B", Each "x" (Impl x y))] (parse "#B->#A&#B"))] ++
+		[(substitude [("A", zr), ("B", Each "x" (Impl x y))] (parse "#A&#B"))] ++
+		[(substitude [("A", zr), ("B", Each "x" (Impl x y)), ("C", x)] (parse "#A&#B->#C"))] ++
+		[(substitude [("C", x)] (parse "#C"))] ++
+		(eat' a (b-1) c)
 
+	
+
+
+hangX e = map ((substitude  [("T", e), ("E", parse "P->P->P")]) . parse) 
+	[ "#T"
+	, "#E"
+	, "#T->#E->#T"
+	, "#E->#T"
+	, "#E->@x(#T)"
+	, "@x(#T)"
+	]
+
+{-
 norm (Not (EqualPredicate a c)) = 
 	let t = 
 		(atoA (EqualPredicate a c)) ++
@@ -216,7 +266,7 @@ norm (Not (EqualPredicate a c)) =
 	[(substitude [("A", Exist "x" (EqualPredicate a c)), ("B", (EqualPredicate a c))] (parse "(#A->!#B)->!#A"))] ++
 	[(substitude [("A", Exist "x" (EqualPredicate a c)), ("B", (EqualPredicate a c))] (parse "!#A"))] ++
 	[(substitude [("A", Exist "x" (EqualPredicate a c)), ("B", (EqualPredicate a c))] (parse "(#A->!#B)->!#A"))]
-
+-}
 
  
 		

@@ -185,6 +185,7 @@ removeZero (Sum a Zero) b =
 	(subAtA2 (Sum a Zero) a b) ++ 
 	[Impl (EqualPredicate (Sum a Zero) b) (EqualPredicate a b)] ++
 	[(EqualPredicate a b)]
+removeZero _ _ = []
 
 atoA e = map (substitude [("A", e)]) (map parse list) 
 	where list =  ["#A->(#A->#A)"
@@ -193,6 +194,7 @@ atoA e = map (substitude [("A", e)]) (map parse list)
 								,"#A->(#A->#A)->#A"
 								,"#A->#A"
 								]
+
 
 
 

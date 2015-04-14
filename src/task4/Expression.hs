@@ -56,6 +56,7 @@ instance Show Term where
 	show (Fun f tl) = "(" ++ f ++ (show tl) ++ ")"
 	show Zero = "0"
 	show (Var x) = x
+	show (Nxt (Nxt x)) = (show (Nxt x)) ++ "'"
 	show (Nxt x) = "(" ++ (show x) ++ ")" ++ "'"
 
 				
